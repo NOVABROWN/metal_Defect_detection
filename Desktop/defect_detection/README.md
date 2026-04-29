@@ -121,6 +121,139 @@ npm start
 
 ---
 
+## 🏋️ Model Training
+
+### Prerequisites for Training
+- CUDA-capable GPU (recommended) or CPU (slower)
+- ~2GB disk space for dataset
+- ~4GB RAM minimum
+
+### Step 1: Download Dataset
+
+```bash
+cd ai-service
+
+# Install Kaggle CLI
+pip install kaggle
+
+# Configure Kaggle credentials
+# Go to https://www.kaggle.com/settings/account and download kaggle.json
+# Place it in ~/.kaggle/kaggle.json (Linux/Mac) or C:\Users\<YourUsername>\.kaggle\ (Windows)
+
+# Run setup script
+python download_dataset.py
+
+# Download from Kaggle using CLI
+kaggle datasets download -d kaustubhdikshit/neu-surface-defect-database
+
+# Extract the dataset
+# Unzip to dataset/ folder (should auto-organize)
+python organize_dataset.py
+```
+
+**Dataset Structure (after extraction):**
+```
+dataset/
+├── train/        (1,500 images total)
+│   ├── Crazing/          (300 images)
+│   ├── Inclusion/        (300 images)
+│   ├── Patches/          (300 images)
+│   ├── Pitted_Surface/   (300 images)
+│   ├── Rolled-in_Scale/  (300 images)
+│   └── Scratches/        (300 images)
+└── test/         (300 images total)
+    ├── Crazing/          (100 images)
+    ├── Inclusion/        (100 images)
+    ├── Patches/          (100 images)
+    ├── Pitted_Surface/   (100 images)
+    ├── Rolled-in_Scale/  (100 images)
+    └── Scratches/        (100 images)
+```
+
+### Step 2: Train the Model
+
+```bash
+cd ai-service
+python train.py
+```
+
+**Training Configuration:**
+- Batch Size: 32
+- Learning Rate: 0.001
+- Epochs: 50 (with early stopping)
+- Optimizer: Adam with ReduceLROnPlateau scheduler
+- Data Augmentation: Rotation, Flip, ColorJitter, Affine transforms
+
+**Training Output:**
+- `model/defect_model.pth` - Best trained model
+- `model/checkpoint_latest.pth` - Latest checkpoint
+- `model/training_metrics.json` - Training statistics
+- `model/training_curves.png` - Loss and accuracy plots
+
+### Step 3: Monitor Training
+
+Training metrics are displayed in real-time:
+- Training loss and accuracy
+- Validation loss and accuracy
+- Learning rate adjustments
+- Best model checkpoint
+
+Example training output:
+```
+Epoch 1 - Train Loss: 0.8234, Accuracy: 65.23%
+Epoch 1 - Val Loss: 0.5123, Accuracy: 78.45%
+...
+Training completed!
+Best validation accuracy: 92.34%
+```
+
+### Step 4: Evaluate Model
+
+After training, classification report and confusion matrix are generated:
+```
+Classification Report:
+              precision    recall  f1-score   support
+    Crazing       0.95      0.93      0.94       100
+  Inclusion       0.92      0.94      0.93       100
+    Patches       0.91      0.92      0.91       100
+Pitted_Surf       0.94      0.91      0.92       100
+Rolled-in_S       0.93      0.95      0.94       100
+   Scratches      0.96      0.94      0.95       100
+```
+
+### Tips for Better Training
+
+1. **GPU Acceleration**: Use CUDA for faster training
+   ```bash
+   # Check CUDA availability
+   python -c "import torch; print(torch.cuda.is_available())"
+   ```
+
+2. **Hyperparameter Tuning**: Edit `train.py` to adjust:
+   - `BATCH_SIZE` - Increase for more GPU memory, decrease for less
+   - `LEARNING_RATE` - Lower for more stable training
+   - `NUM_EPOCHS` - Increase for better accuracy (may overfit)
+
+3. **Data Augmentation**: Already included in training script:
+   - Random horizontal flips
+   - Rotation (±15 degrees)
+   - Color jitter (brightness, contrast, saturation)
+   - Random affine transformations
+
+4. **Early Stopping**: Automatically stops if no improvement for 15 epochs
+
+### Troubleshooting Training
+
+| Issue | Solution |
+|-------|----------|
+| Out of Memory (OOM) | Reduce BATCH_SIZE in train.py |
+| Slow training | Use GPU (check CUDA availability) |
+| Low accuracy | Ensure dataset is properly extracted in correct structure |
+| Model not saving | Check write permissions in model/ directory |
+| Dataset not found | Run `python organize_dataset.py` after extraction |
+
+---
+
 ## 📊 Defect Classification
 
 The system can detect 6 types of metal surface defects:
