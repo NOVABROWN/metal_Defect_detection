@@ -95,7 +95,7 @@ const ResultPage = () => {
             <h2 className="text-xl font-bold mb-4">Analyzed Image</h2>
             {detection?.imageUrl && (
               <img
-                src={detection.imageUrl}
+                src={`${API_URL}${detection.imageUrl}`}
                 alt="Analyzed"
                 className="w-full h-96 object-cover rounded-lg"
               />

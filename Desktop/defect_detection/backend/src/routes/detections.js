@@ -2,21 +2,36 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const axios = require('axios');
-const cloudinary = require('cloudinary').v2;
 const Detection = require('../models/Detection');
+const fs = require('fs');
+const path = require('path');
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, '../../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // Multer for file upload
-const storage = multer.memoryStorage();
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+
 const upload = multer({ 
   storage,
-  limits: { fileSize: 50 * 1024 * 1024 }
+  limits: { fileSize: 50 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
 });
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
@@ -31,81 +46,111 @@ router.post('/upload', upload.single('image'), async (req, res) => {
       });
     }
 
-    // Upload to Cloudinary
-    const uploadStream = cloudinary.uploader.upload_stream({
-      folder: 'defect-detection',
-      resource_type: 'auto'
-    }, async (error, result) => {
-      if (error) {
+    console.log('File received:', req.file.filename);
+
+    try {
+      // Read file and send to AI Service for prediction
+      const fs = require('fs');
+      const FormData = require('form-data');
+      
+      const fileStream = fs.createReadStream(req.file.path);
+      const formData = new FormData();
+      formData.append('file', fileStream, {
+        filename: req.file.filename,
+        contentType: req.file.mimetype
+      });
+
+      console.log('Sending to AI service:', AI_SERVICE_URL);
+      
+      const aiResponse = await axios.post(
+        `${AI_SERVICE_URL}/predict`,
+        formData,
+        { 
+          headers: formData.getHeaders(),
+          timeout: 30000
+        }
+      );
+
+      console.log('AI Response:', aiResponse.data);
+
+      if (!aiResponse.data.success) {
+        // Clean up uploaded file on AI error
+        fs.unlink(req.file.path, (err) => {
+          if (err) console.error('Error deleting file:', err);
+        });
+        
         return res.status(500).json({
           success: false,
-          message: 'Image upload failed',
-          error: error.message
+          message: 'AI prediction failed: ' + (aiResponse.data.message || 'Unknown error')
         });
       }
 
-      try {
-        // Send to AI Service for prediction
-        const formData = new FormData();
-        formData.append('file', new Blob([req.file.buffer]), req.file.originalname);
+      const { defect_type, confidence, severity } = aiResponse.data.data;
 
-        const aiResponse = await axios.post(
-          `${AI_SERVICE_URL}/predict`,
-          formData,
-          { headers: { 'Content-Type': 'multipart/form-data' } }
-        );
+      // Save to database
+      const detection = new Detection({
+        imageUrl: `/uploads/${req.file.filename}`,
+        imageFileName: req.file.originalname,
+        defectType: defect_type,
+        confidence,
+        severity,
+        metalType: 'Steel'
+      });
 
-        if (!aiResponse.data.success) {
-          return res.status(500).json({
-            success: false,
-            message: 'AI prediction failed'
-          });
-        }
+      await detection.save();
 
-        const { defect_type, confidence, severity } = aiResponse.data.data;
-
-        // Save to database
-        const detection = new Detection({
-          imageUrl: result.secure_url,
-          imageFileName: req.file.originalname,
+      res.status(201).json({
+        success: true,
+        data: {
+          detectionId: detection._id,
+          imageUrl: `/uploads/${req.file.filename}`,
           defectType: defect_type,
           confidence,
-          severity,
-          metalType: 'Steel' // Default, can be determined by another model
-        });
+          severity
+        },
+        message: 'Detection completed successfully'
+      });
 
-        await detection.save();
-
-        res.status(201).json({
-          success: true,
-          data: {
-            detectionId: detection._id,
-            imageUrl: result.secure_url,
-            defectType,
-            confidence,
-            severity
-          },
-          message: 'Detection completed successfully'
-        });
-
-      } catch (error) {
-        console.error('Error in detection processing:', error);
-        res.status(500).json({
-          success: false,
-          message: 'Error processing detection',
-          error: error.message
+    } catch (error) {
+      // Clean up uploaded file on error
+      if (req.file) {
+        const fs = require('fs');
+        fs.unlink(req.file.path, (err) => {
+          if (err) console.error('Error deleting file:', err);
         });
       }
-    });
-
-    uploadStream.end(req.file.buffer);
+      
+      console.error('Error in detection processing - Full Error:', {
+        message: error.message,
+        code: error.code,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data
+      });
+      
+      res.status(500).json({
+        success: false,
+        message: 'Error processing detection: ' + (error.message || 'Unknown error'),
+        details: {
+          code: error.code,
+          aiServiceUrl: AI_SERVICE_URL
+        }
+      });
+    }
 
   } catch (error) {
+    // Clean up uploaded file on error
+    if (req.file) {
+      const fs = require('fs');
+      fs.unlink(req.file.path, (err) => {
+        if (err) console.error('Error deleting file:', err);
+      });
+    }
+    
     console.error('Upload error:', error);
     res.status(500).json({
       success: false,
-      message: 'Upload failed',
-      error: error.message
+      message: 'Upload failed: ' + error.message
     });
   }
 });
