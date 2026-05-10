@@ -22,33 +22,26 @@ router.post('/', async (req, res) => {
     };
 
     // Recommendation Logic
-    if (defectType === 'Scratches' && severity === 'Low') {
+    if (defectType === 'Scratches') {
       recommendation = {
-        action: 'Re-polish',
+        action: severity === 'High' ? 'Surface Grinding' : 'Re-polish',
         method: 'Surface Polishing & Finishing',
-        costSaved: 150,
+        costSaved: severity === 'High' ? 100 : 150,
         co2Saved: 10
       };
-    } else if (defectType === 'Crazing' && severity === 'Low') {
+    } else if (defectType === 'Crazing') {
       recommendation = {
-        action: 'Reuse',
-        method: 'Direct Reuse After Inspection',
-        costSaved: 100,
-        co2Saved: 15
+        action: severity === 'High' ? 'Scrap Recycling' : 'Reuse',
+        method: severity === 'High' ? 'Thermal/Mechanical Recycling' : 'Direct Reuse After Inspection',
+        costSaved: severity === 'High' ? 80 : 100,
+        co2Saved: severity === 'High' ? 25 : 15
       };
-    } else if ((defectType === 'Inclusion' || defectType === 'Patches') && severity === 'Medium') {
+    } else if (defectType === 'Inclusion' || defectType === 'Patches') {
       recommendation = {
         action: 'Chemical Recycling',
         method: 'Acid/Base Treatment & Recovery',
         costSaved: 200,
         co2Saved: 20
-      };
-    } else if (severity === 'High') {
-      recommendation = {
-        action: 'Scrap Recycling',
-        method: 'Thermal/Mechanical Recycling',
-        costSaved: 80,
-        co2Saved: 25
       };
     } else if (defectType === 'Rolled-in Scale' || defectType === 'Pitted Surface') {
       recommendation = {

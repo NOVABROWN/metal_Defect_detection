@@ -1,34 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import {
-  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis,
-  CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis,
+  CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
+import { AuthContext } from '../context/AuthContext';
 
 const DashboardPage = () => {
   const [analytics, setAnalytics] = useState(null);
+  const [myDetections, setMyDetections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { user } = useContext(AuthContext);
+  const isAdmin = user?.role === 'admin';
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
   useEffect(() => {
-    const fetchAnalytics = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get(`${API_URL}/api/analytics`);
-        if (response.data.success) {
-          setAnalytics(response.data.data);
+        if (isAdmin) {
+          // Admin gets full analytics
+          const response = await axios.get(`${API_URL}/api/analytics`);
+          if (response.data.success) {
+            setAnalytics(response.data.data);
+          }
+        } else {
+          // Worker gets their own detections
+          const response = await axios.get(`${API_URL}/api/detections`);
+          if (response.data.success) {
+            setMyDetections(response.data.data);
+          }
         }
       } catch (err) {
-        setError('Error fetching analytics: ' + err.message);
+        setError('Error fetching data: ' + err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAnalytics();
-  }, [API_URL]);
+    fetchData();
+  }, [API_URL, isAdmin]);
 
   if (loading) {
     return (
@@ -40,9 +53,99 @@ const DashboardPage = () => {
 
   const summary = analytics?.summary || {};
 
+  // Worker personal dashboard
+  if (!isAdmin) {
+    const defectCounts = myDetections.reduce((acc, d) => {
+      acc[d.defectType] = (acc[d.defectType] || 0) + 1;
+      return acc;
+    }, {});
+    const defectChartData = Object.entries(defectCounts).map(([name, count]) => ({ name, count }));
+
+    return (
+      <div className="container mx-auto px-4 py-12">
+        <h1 className="text-4xl font-bold text-gray-900 mb-2 text-center">My Dashboard</h1>
+        <p className="text-center text-gray-500 mb-10">Showing your personal detections, {user?.username}</p>
+
+        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-8">{error}</div>}
+
+        {/* Personal Summary Cards */}
+        <div className="grid md:grid-cols-3 gap-6 mb-10">
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <p className="text-gray-500 text-sm">My Total Uploads</p>
+            <p className="text-3xl font-bold text-blue-600 mt-2">{myDetections.length}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <p className="text-gray-500 text-sm">High Severity</p>
+            <p className="text-3xl font-bold text-red-600 mt-2">{myDetections.filter(d => d.severity === 'High').length}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <p className="text-gray-500 text-sm">Avg Confidence</p>
+            <p className="text-3xl font-bold text-green-600 mt-2">
+              {myDetections.length > 0
+                ? (myDetections.reduce((s, d) => s + d.confidence, 0) / myDetections.length * 100).toFixed(1) + '%'
+                : 'N/A'}
+            </p>
+          </div>
+        </div>
+
+        {/* My Defects Chart */}
+        {defectChartData.length > 0 && (
+          <div className="bg-white rounded-lg shadow-lg p-6 mb-10">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">My Defects by Type</h2>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={defectChartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="count" fill="#3b82f6" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* My Detection History */}
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">My Recent Detections</h2>
+          {myDetections.length === 0 ? (
+            <p className="text-gray-500 text-center py-8">No detections yet. <a href="/upload" className="text-blue-600 hover:underline">Upload an image</a> to get started.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-gray-50 text-gray-600 uppercase text-xs">
+                  <tr>
+                    <th className="px-4 py-3">Defect Type</th>
+                    <th className="px-4 py-3">Severity</th>
+                    <th className="px-4 py-3">Confidence</th>
+                    <th className="px-4 py-3">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {myDetections.map((d) => (
+                    <tr key={d._id} className="border-b hover:bg-gray-50">
+                      <td className="px-4 py-3 font-medium">{d.defectType}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${d.severity === 'High' ? 'bg-red-100 text-red-700' : d.severity === 'Medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                          {d.severity}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">{(d.confidence * 100).toFixed(1)}%</td>
+                      <td className="px-4 py-3 text-gray-500">{new Date(d.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-12">
-      <h1 className="text-4xl font-bold text-gray-900 mb-12 text-center">Sustainability Dashboard</h1>
+      <h1 className="text-4xl font-bold text-gray-900 mb-2 text-center">Admin Dashboard</h1>
+      <p className="text-center text-gray-500 mb-10">Full factory analytics and monitoring</p>
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-8">

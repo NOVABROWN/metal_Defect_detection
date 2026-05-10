@@ -227,8 +227,8 @@ def validate(model, val_loader, criterion, epoch):
 def train():
     """Main training function"""
     # Check dataset exists
-    train_dir = DATASET_PATH / "train"
-    test_dir = DATASET_PATH / "test"
+    train_dir = DATASET_PATH / "train" / "images"
+    test_dir = DATASET_PATH / "test" / "images"
 
     if not train_dir.exists() or not test_dir.exists():
         logger.error(f"Dataset not found at {DATASET_PATH}")
@@ -278,7 +278,7 @@ def train():
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 
                           lr=LEARNING_RATE)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', 
-                                                     factor=0.5, patience=5, verbose=True)
+                                                     factor=0.5, patience=5)
 
     # Training loop
     best_val_acc = 0.0

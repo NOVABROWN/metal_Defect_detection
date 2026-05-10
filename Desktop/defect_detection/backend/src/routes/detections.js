@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const axios = require('axios');
 const Detection = require('../models/Detection');
+const { protect } = require('../middleware/auth');
 const fs = require('fs');
 const path = require('path');
 
@@ -37,7 +38,7 @@ const upload = multer({
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
 
 // POST - Upload image and get detection
-router.post('/upload', upload.single('image'), async (req, res) => {
+router.post('/upload', protect, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -89,6 +90,7 @@ router.post('/upload', upload.single('image'), async (req, res) => {
 
       // Save to database
       const detection = new Detection({
+        userId: req.user._id,
         imageUrl: `/uploads/${req.file.filename}`,
         imageFileName: req.file.originalname,
         defectType: defect_type,
@@ -156,7 +158,7 @@ router.post('/upload', upload.single('image'), async (req, res) => {
 });
 
 // GET - Get detection result by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', protect, async (req, res) => {
   try {
     const detection = await Detection.findById(req.params.id);
 
@@ -164,6 +166,13 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Detection not found'
+      });
+    }
+
+    if (req.user.role !== 'admin' && detection.userId && detection.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to view this detection'
       });
     }
 
@@ -183,18 +192,23 @@ router.get('/:id', async (req, res) => {
 });
 
 // GET - Get all detections with pagination
-router.get('/', async (req, res) => {
+router.get('/', protect, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const detections = await Detection.find()
+    let query = {};
+    if (req.user.role !== 'admin') {
+      query = { userId: req.user._id };
+    }
+
+    const detections = await Detection.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
-    const total = await Detection.countDocuments();
+    const total = await Detection.countDocuments(query);
 
     res.json({
       success: true,
@@ -218,9 +232,9 @@ router.get('/', async (req, res) => {
 });
 
 // DELETE - Delete detection
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', protect, async (req, res) => {
   try {
-    const detection = await Detection.findByIdAndDelete(req.params.id);
+    const detection = await Detection.findById(req.params.id);
 
     if (!detection) {
       return res.status(404).json({
@@ -228,6 +242,15 @@ router.delete('/:id', async (req, res) => {
         message: 'Detection not found'
       });
     }
+
+    if (req.user.role !== 'admin' && detection.userId && detection.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to delete this detection'
+      });
+    }
+
+    await Detection.findByIdAndDelete(req.params.id);
 
     res.json({
       success: true,

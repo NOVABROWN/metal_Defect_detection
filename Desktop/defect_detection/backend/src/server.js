@@ -2,12 +2,14 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const path = require('path');
 require('express-async-errors');
 
 const detectionRoutes = require('./routes/detections');
 const scrapInventoryRoutes = require('./routes/scrapInventory');
 const recyclingRecommendationRoutes = require('./routes/recyclingRecommendation');
 const analyticsRoutes = require('./routes/analytics');
+const authRoutes = require('./routes/authRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -16,6 +18,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Database Connection
 const connectDB = async () => {
@@ -39,6 +44,7 @@ app.use('/api/detections', detectionRoutes);
 app.use('/api/scrap', scrapInventoryRoutes);
 app.use('/api/recommend', recyclingRecommendationRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/auth', authRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {

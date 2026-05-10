@@ -55,9 +55,11 @@ class DefectDetectionModel:
             num_features = resnet50.fc.in_features
             resnet50.fc = nn.Sequential(
                 nn.Linear(num_features, 512),
+                nn.BatchNorm1d(512),
                 nn.ReLU(),
                 nn.Dropout(0.3),
                 nn.Linear(512, 128),
+                nn.BatchNorm1d(128),
                 nn.ReLU(),
                 nn.Dropout(0.2),
                 nn.Linear(128, len(self.DEFECT_CLASSES))

@@ -36,7 +36,7 @@ EPOCHS = 50
 BATCH_SIZE = 32
 LEARNING_RATE = 0.001
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-DATASET_PATH = "../../dataset/train"
+DATASET_PATH = "../dataset/train"
 
 def train():
     # Build model

@@ -6,22 +6,20 @@ from torchvision import transforms
 def preprocess_image(image, target_size=(224, 224)):
     """
     Preprocess image for model prediction
+    Returns PIL Image for compatibility with torchvision transforms
     """
-    # Convert PIL image to numpy array if needed
-    if isinstance(image, Image.Image):
-        image = np.array(image)
+    # Convert to PIL image if it's numpy array
+    if isinstance(image, np.ndarray):
+        image = Image.fromarray(image.astype('uint8'))
+    elif not isinstance(image, Image.Image):
+        image = Image.fromarray(np.array(image).astype('uint8'))
     
-    # If grayscale, convert to RGB
-    if len(image.shape) == 2:
-        image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-    elif image.shape[2] == 4:
-        image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
+    # Convert to RGB if needed
+    if image.mode != 'RGB':
+        image = image.convert('RGB')
     
     # Resize to target size
-    image = cv2.resize(image, target_size)
-    
-    # Normalize
-    image = image.astype(np.float32) / 255.0
+    image = image.resize(target_size, Image.Resampling.LANCZOS)
     
     return image
 
