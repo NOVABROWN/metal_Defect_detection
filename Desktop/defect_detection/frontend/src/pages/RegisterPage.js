@@ -23,45 +23,58 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] bg-gray-50">
-      <div className="px-8 py-6 mt-4 text-left bg-white shadow-lg w-full max-w-md rounded-xl">
-        <h3 className="text-2xl font-bold text-center text-gray-800">Create an account</h3>
-        {error && <p className="text-red-500 text-sm mt-4 text-center bg-red-50 p-2 rounded">{error}</p>}
+    <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] bg-zinc-950 font-sans relative py-12">
+      <div className="px-8 py-8 mt-4 text-left bg-zinc-900 border border-zinc-800 shadow-2xl w-full max-w-md rounded-2xl relative z-10">
+        
+        <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 w-24 h-24 bg-zinc-950 rounded-full border-4 border-zinc-900 flex items-center justify-center animate-[bounce_4s_ease-in-out_infinite]">
+          <img src="/mascot.png" alt="Mascot" className="w-16 h-16 object-contain" />
+        </div>
+
+        <h3 className="text-2xl font-black text-center text-zinc-100 uppercase tracking-tight mt-8">System <span className="text-amber-500">Registration</span></h3>
+        <p className="text-center text-zinc-500 font-mono text-xs tracking-widest uppercase mt-2 mb-6">Initialize Operator Profile</p>
+        
+        {error && <p className="text-red-400 text-sm mt-4 text-center bg-red-500/10 border border-red-500/20 font-mono p-3 rounded-lg uppercase tracking-wider">{error}</p>}
+        
         <form onSubmit={handleSubmit}>
-          <div className="mt-4">
+          <div className="mt-4 space-y-6">
             <div>
-              <label className="block text-gray-700">Username</label>
-              <input type="text" placeholder="Username"
-                className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"
+              <label className="block text-zinc-500 font-mono text-xs uppercase tracking-widest mb-2">Operator Handle (Username)</label>
+              <input type="text" placeholder="username"
+                className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-amber-500 transition-colors font-mono"
                 value={username} onChange={(e) => setUsername(e.target.value)} required />
             </div>
-            <div className="mt-4">
-              <label className="block text-gray-700">Email</label>
-              <input type="email" placeholder="Email"
-                className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"
+            
+            <div>
+              <label className="block text-zinc-500 font-mono text-xs uppercase tracking-widest mb-2">Comms Link (Email)</label>
+              <input type="email" placeholder="email@factory.local"
+                className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-amber-500 transition-colors font-mono"
                 value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
-            <div className="mt-4">
-              <label className="block text-gray-700">Password</label>
-              <input type="password" placeholder="Password"
-                className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"
+            
+            <div>
+              <label className="block text-zinc-500 font-mono text-xs uppercase tracking-widest mb-2">Security Key (Password)</label>
+              <input type="password" placeholder="••••••••"
+                className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-amber-500 transition-colors font-mono tracking-widest"
                 value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
-            <div className="mt-4">
-              <label className="block text-gray-700">Account Role</label>
+            
+            <div>
+              <label className="block text-zinc-500 font-mono text-xs uppercase tracking-widest mb-2">Clearance Level (Role)</label>
               <select 
-                className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600 bg-white"
+                className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-amber-500 transition-colors font-mono text-sm"
                 value={role} onChange={(e) => setRole(e.target.value)}
               >
-                <option value="worker">Factory Worker (Upload & Personal Stats)</option>
-                <option value="admin">Admin (Full Dashboard Access)</option>
+                <option value="worker">Level 1: Floor Operator</option>
+                <option value="admin">Level 5: Systems Admin</option>
               </select>
             </div>
-            <div className="flex items-baseline justify-between mt-6">
-              <button className="px-6 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 w-full transition-colors">Register</button>
+            
+            <div className="mt-8">
+              <button className="px-6 py-3 text-zinc-950 bg-emerald-600 rounded-xl font-black hover:bg-emerald-500 w-full transition-all uppercase tracking-widest shadow-lg shadow-emerald-500/20">Establish Profile</button>
             </div>
-            <div className="mt-4 text-center">
-              <Link to="/login" className="text-sm text-blue-600 hover:underline">Already have an account? Login here</Link>
+            
+            <div className="mt-6 text-center">
+              <Link to="/login" className="text-xs text-emerald-500 hover:text-emerald-400 font-mono uppercase tracking-widest hover:underline transition-colors">Already registered? Authenticate</Link>
             </div>
           </div>
         </form>

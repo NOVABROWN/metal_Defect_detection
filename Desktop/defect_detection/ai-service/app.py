@@ -1,4 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
+from dotenv import load_dotenv
+load_dotenv(override=True)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import cv2
@@ -16,9 +18,12 @@ logger = logging.getLogger(__name__)
 # Initialize FastAPI app
 app = FastAPI(
     title="Metal Defect Detection API",
-    description="AI Service for detecting defects in metal surfaces",
+    description="AI Service for detecting defects in metal surfaces and AI Chatbot",
     version="1.0.0"
 )
+
+from chat_router import router as chat_router
+app.include_router(chat_router)
 
 # Add CORS middleware
 app.add_middleware(

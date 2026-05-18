@@ -1,0 +1,81 @@
+version: "3.9"
+
+services:
+  # ── MongoDB ────────────────────────────────
+  mongodb:
+    image: mongo:7
+    container_name: defect_mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: metal_defect_db
+    networks:
+      - defect_net
+
+  # ── Node.js Backend (Express) ───────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: defect_backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongodb
+    environment:
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://mongodb:27017/metal_defect_db
+      - JWT_SECRET=${JWT_SECRET}
+      - AI_SERVICE_URL=http://ai-service:8000
+    networks:
+      - defect_net
+
+  # ── Python AI Service (FastAPI + RAG) ──────
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: defect_ai_service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongodb
+    volumes:
+      - ai_chroma_data:/app/chroma_db
+      - ai_uploads:/app/uploaded_docs
+      - ai_models:/app/model
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - MONGODB_URL=mongodb://mongodb:27017/metal_defect_db
+    networks:
+      - defect_net
+
+  # ── React Frontend (Nginx) ──────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: defect_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+      - ai-service
+    networks:
+      - defect_net
+
+volumes:
+  mongo_data:
+  ai_chroma_data:
+  ai_uploads:
+  ai_models:
+
+networks:
+  defect_net:
+    driver: bridge

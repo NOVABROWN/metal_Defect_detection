@@ -5,10 +5,23 @@ A comprehensive AI-powered system for detecting metal surface defects and recomm
 ## 📋 System Overview
 
 **Architecture**: Microservices-based with RESTful APIs
-- **AI Service**: Python FastAPI with CNN-based defect detection
-- **Backend**: Node.js Express API with MongoDB
-- **Frontend**: React.js with Tailwind CSS
-- **Database**: MongoDB for data persistence
+- **AI Service**: Python FastAPI with CNN-based defect detection. Stabilized with a **Dual-LLM RAG Engine** supporting both **Gemini** and **Groq (`llama-3.1-8b-instant`)** with an offline-capable **Mock AI fallback mechanism** to ensure 100% operational continuity.
+- **Backend**: Node.js Express API with MongoDB and JWT Role-Based Access Control (RBAC).
+- **Frontend**: React.js with a premium, fully customized **"Industrial Amber & Zinc" HUD theme** (dark mode metallic layout, amber indicators, monospaced diagnostic telemetry, and animated robotic mascot).
+- **Database**: MongoDB for analytical storage and scrap metrics.
+
+---
+
+## 🎨 Design System: "Industrial Amber & Zinc"
+
+The frontend layout has been fully overhaulled to provide a highly-immersive, high-contrast, plant-floor terminal aesthetic:
+* **Rich Dark Aesthetics**: Uses `zinc-950` as the application base and `zinc-900` container cards, creating a modern, low-glare metallic appearance ideal for industrial environments.
+* **Functional Accent Palettes**:
+  - `Amber-500` for warning indicators, primary call-to-actions, and main diagnostics.
+  - `Emerald-500` for active systems, secure operations, and carbon footprint metrics.
+  - `Cyan-500` for scrap statistics, data telemetry, and system-level logs.
+* **Robotic Mascot**: Features a lively, animated mascot (`mascot.png`) integrated into loading frames, scanner interfaces, and system access terminals.
+* **Scan-Line Animations**: Custom linear scanner swipe effects are built into the upload zones, simulating live laser diagnostics.
 
 ---
 

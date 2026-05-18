@@ -17,7 +17,9 @@ const Navbar = () => {
     { to: '/', label: '🏠 Home', always: true },
     { to: '/upload', label: '📤 Upload', auth: true },
     { to: '/dashboard', label: '📊 Dashboard', auth: true },
+    { to: '/chat', label: '🤖 AI Chat', auth: true },
     { to: '/inventory', label: '📦 Inventory', adminOnly: true },
+    { to: '/knowledge-base', label: '🧠 Knowledge Base', adminOnly: true },
   ].filter(link =>
     link.always ||
     (link.auth && isAuthenticated) ||
@@ -25,11 +27,11 @@ const Navbar = () => {
   );
 
   return (
-    <nav className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 text-white shadow-2xl sticky top-0 z-50">
+    <nav className="bg-zinc-900 border-b border-zinc-700 text-zinc-100 shadow-2xl sticky top-0 z-50 font-sans">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <Link to="/" className="flex items-center space-x-3 text-2xl font-bold hover:scale-105 transition transform">
-          <FaRobot className="text-3xl" />
-          <span className="bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">DefectAI</span>
+          <FaRobot className="text-3xl text-amber-500" />
+          <span className="text-amber-500 tracking-wider font-mono uppercase">DefectAI</span>
         </Link>
 
         <div className="hidden md:flex items-center space-x-8">
@@ -37,25 +39,25 @@ const Navbar = () => {
             <Link
               key={link.to}
               to={link.to}
-              className="hover:text-blue-100 transition duration-300 font-semibold text-lg relative group"
+              className="hover:text-amber-400 transition duration-300 font-semibold text-sm tracking-wide uppercase relative group"
             >
               {link.label}
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300"></span>
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-amber-500 group-hover:w-full transition-all duration-300"></span>
             </Link>
           ))}
 
           {isAuthenticated ? (
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 bg-white/10 px-3 py-1.5 rounded-full">
-                <FaUserCircle />
-                <span className="font-semibold text-sm">{user?.username}</span>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${user?.role === 'admin' ? 'bg-yellow-400 text-yellow-900' : 'bg-green-400 text-green-900'}`}>
+              <div className="flex items-center space-x-2 bg-zinc-800 border border-zinc-700 px-3 py-1.5 rounded-lg">
+                <FaUserCircle className="text-amber-500" />
+                <span className="font-mono text-sm">{user?.username}</span>
+                <span className={`text-[10px] px-2 py-0.5 rounded uppercase font-bold tracking-wider ${user?.role === 'admin' ? 'bg-amber-500 text-zinc-900' : 'bg-emerald-500 text-zinc-900'}`}>
                   {user?.role}
                 </span>
               </div>
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-1 bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg transition text-sm font-semibold"
+                className="flex items-center space-x-1 bg-red-900/50 border border-red-700 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded-lg transition text-sm font-semibold uppercase tracking-wider"
               >
                 <FaSignOutAlt />
                 <span>Logout</span>
@@ -63,8 +65,8 @@ const Navbar = () => {
             </div>
           ) : (
             <div className="flex items-center space-x-3">
-              <Link to="/login" className="hover:text-blue-100 font-semibold transition">Login</Link>
-              <Link to="/register" className="bg-white text-blue-700 hover:bg-blue-50 px-4 py-1.5 rounded-lg font-semibold transition">Register</Link>
+              <Link to="/login" className="hover:text-amber-400 font-mono text-sm uppercase tracking-wide transition">Login</Link>
+              <Link to="/register" className="bg-amber-500 text-zinc-900 hover:bg-amber-400 px-4 py-1.5 rounded-lg font-bold font-mono text-sm uppercase tracking-wide transition shadow-lg shadow-amber-500/20">Register</Link>
             </div>
           )}
         </div>
@@ -77,27 +79,27 @@ const Navbar = () => {
         </button>
 
         {isOpen && (
-          <div className="absolute top-20 right-0 bg-gradient-to-b from-blue-700 to-blue-900 w-full md:hidden shadow-2xl">
+          <div className="absolute top-[68px] right-0 bg-zinc-900 border-b border-zinc-700 w-full md:hidden shadow-2xl">
             <div className="flex flex-col space-y-4 p-6">
               {navLinks.map((link) => (
                 <Link
                   key={link.to}
                   to={link.to}
-                  className="hover:text-blue-200 hover:ml-2 transition duration-300 font-semibold text-lg"
+                  className="hover:text-amber-400 hover:ml-2 transition duration-300 font-mono text-sm uppercase tracking-wide"
                   onClick={() => setIsOpen(false)}
                 >
                   {link.label}
                 </Link>
               ))}
               {isAuthenticated ? (
-                <button onClick={handleLogout} className="text-left text-red-300 hover:text-red-100 font-semibold text-lg">
+                <button onClick={handleLogout} className="text-left text-red-400 hover:text-red-300 font-mono text-sm uppercase tracking-wide mt-4">
                   🚪 Logout ({user?.username})
                 </button>
               ) : (
-                <>
-                  <Link to="/login" className="hover:text-blue-200 font-semibold text-lg" onClick={() => setIsOpen(false)}>🔑 Login</Link>
-                  <Link to="/register" className="hover:text-blue-200 font-semibold text-lg" onClick={() => setIsOpen(false)}>📝 Register</Link>
-                </>
+                <div className="flex flex-col space-y-4 pt-4 border-t border-zinc-700">
+                  <Link to="/login" className="hover:text-amber-400 font-mono text-sm uppercase tracking-wide" onClick={() => setIsOpen(false)}>🔑 Login</Link>
+                  <Link to="/register" className="text-amber-500 font-mono text-sm uppercase tracking-wide" onClick={() => setIsOpen(false)}>📝 Register</Link>
+                </div>
               )}
             </div>
           </div>

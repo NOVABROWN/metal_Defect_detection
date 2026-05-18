@@ -78,8 +78,9 @@ const ScrapInventoryPage = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-12 text-center">
-        <p className="text-xl text-gray-600">Loading inventory...</p>
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center font-sans">
+        <div className="w-12 h-12 border-4 border-zinc-800 border-t-amber-500 rounded-full animate-spin mb-4"></div>
+        <p className="text-xl text-amber-500 font-mono tracking-widest uppercase animate-pulse">Loading Inventory Data...</p>
       </div>
     );
   }
@@ -87,194 +88,196 @@ const ScrapInventoryPage = () => {
   const getStatusBadgeColor = (status) => {
     switch (status) {
       case 'reusable':
-        return 'bg-green-100 text-green-800';
+        return 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20';
       case 'scrap':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-amber-500/10 text-amber-500 border border-amber-500/20';
       case 'recycled':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-cyan-500/10 text-cyan-500 border border-cyan-500/20';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-zinc-800 text-zinc-400 border border-zinc-700';
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <h1 className="text-4xl font-bold text-gray-900 mb-8 text-center">Scrap Inventory Management</h1>
+    <div className="min-h-screen bg-zinc-950 py-12 font-sans text-zinc-100">
+      <div className="container mx-auto px-4 relative">
+        <h1 className="text-4xl font-black text-zinc-100 mb-8 text-center uppercase tracking-tight">Scrap <span className="text-amber-500">Inventory</span></h1>
 
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-8">
-          {error}
-        </div>
-      )}
-
-      {/* Summary Cards */}
-      {summary && (
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <p className="text-gray-500 text-sm">Total Items</p>
-            <p className="text-3xl font-bold text-blue-600 mt-2">{summary.total}</p>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <p className="text-gray-500 text-sm">Total Quantity</p>
-            <p className="text-3xl font-bold text-green-600 mt-2">{summary.totalQuantity} kg</p>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <p className="text-gray-500 text-sm">Reusable Items</p>
-            <p className="text-3xl font-bold text-emerald-600 mt-2">
-              {Object.entries(summary.byStatus).find(([k]) => k === 'reusable')?.[1] || 0} kg
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Add New Item Button */}
-      <div className="mb-8">
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition"
-        >
-          {showForm ? 'Cancel' : '+ Add New Item'}
-        </button>
-      </div>
-
-      {/* Add Item Form */}
-      {showForm && (
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Add Scrap Item</h2>
-          <form onSubmit={handleAddItem} className="grid md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-gray-700 font-semibold mb-2">Metal Type</label>
-              <select
-                name="metalType"
-                value={formData.metalType}
-                onChange={handleFormChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              >
-                <option>Steel</option>
-                <option>Aluminum</option>
-                <option>Copper</option>
-                <option>Iron</option>
-                <option>Other</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-gray-700 font-semibold mb-2">Quantity (kg)</label>
-              <input
-                type="number"
-                name="quantity"
-                value={formData.quantity}
-                onChange={handleFormChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-gray-700 font-semibold mb-2">Status</label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleFormChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              >
-                <option value="reusable">Reusable</option>
-                <option value="scrap">Scrap</option>
-                <option value="recycled">Recycled</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-gray-700 font-semibold mb-2">Location</label>
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleFormChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                required
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-gray-700 font-semibold mb-2">Notes</label>
-              <textarea
-                name="notes"
-                value={formData.notes}
-                onChange={handleFormChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                rows="3"
-              ></textarea>
-            </div>
-
-            <div>
-              <label className="block text-gray-700 font-semibold mb-2">Estimated Value ($)</label>
-              <input
-                type="number"
-                name="estimatedValue"
-                value={formData.estimatedValue}
-                onChange={handleFormChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <button
-                type="submit"
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition"
-              >
-                Add Item
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Inventory Table */}
-      <div className="bg-white rounded-lg shadow-lg overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-100 border-b">
-            <tr>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Metal Type</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Quantity (kg)</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Status</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Location</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Value</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {inventory.map((item) => (
-              <tr key={item._id} className="border-b hover:bg-gray-50">
-                <td className="px-6 py-4 text-sm text-gray-900">{item.metalType}</td>
-                <td className="px-6 py-4 text-sm text-gray-900">{item.quantity}</td>
-                <td className="px-6 py-4 text-sm">
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(item.status)}`}>
-                    {item.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600">{item.location}</td>
-                <td className="px-6 py-4 text-sm text-gray-900">${item.estimatedValue}</td>
-                <td className="px-6 py-4 text-sm">
-                  <button
-                    onClick={() => handleDeleteItem(item._id)}
-                    className="text-red-600 hover:text-red-800 font-semibold"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {inventory.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
-            No scrap items in inventory. Add your first item!
+        {error && (
+          <div className="bg-red-950/50 border border-red-900 text-red-200 px-4 py-3 rounded-xl mb-8 font-mono text-sm">
+            {error}
           </div>
         )}
+
+        {/* Summary Cards */}
+        {summary && (
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl p-6 hover:border-amber-500/50 transition-colors">
+              <p className="text-zinc-500 font-mono text-xs uppercase tracking-widest">Total Items</p>
+              <p className="text-4xl font-black text-amber-500 mt-2">{summary.total}</p>
+            </div>
+
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl p-6 hover:border-cyan-500/50 transition-colors">
+              <p className="text-zinc-500 font-mono text-xs uppercase tracking-widest">Total Quantity</p>
+              <p className="text-4xl font-black text-cyan-500 mt-2">{summary.totalQuantity} <span className="text-lg">kg</span></p>
+            </div>
+
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl p-6 hover:border-emerald-500/50 transition-colors">
+              <p className="text-zinc-500 font-mono text-xs uppercase tracking-widest">Reusable Items</p>
+              <p className="text-4xl font-black text-emerald-500 mt-2">
+                {Object.entries(summary.byStatus).find(([k]) => k === 'reusable')?.[1] || 0} <span className="text-lg">kg</span>
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Add New Item Button */}
+        <div className="mb-8">
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="bg-amber-600 hover:bg-amber-500 text-zinc-950 font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-amber-500/20 uppercase tracking-wider"
+          >
+            {showForm ? 'Cancel Operation' : '+ Add New Item'}
+          </button>
+        </div>
+
+        {/* Add Item Form */}
+        {showForm && (
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl p-8 mb-8">
+            <h2 className="text-2xl font-bold text-zinc-100 mb-6 font-mono tracking-wider uppercase">Log New Material</h2>
+            <form onSubmit={handleAddItem} className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-zinc-500 font-mono text-xs uppercase tracking-widest mb-2">Material Signature</label>
+                <select
+                  name="metalType"
+                  value={formData.metalType}
+                  onChange={handleFormChange}
+                  className="w-full px-4 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-amber-500"
+                >
+                  <option>Steel</option>
+                  <option>Aluminum</option>
+                  <option>Copper</option>
+                  <option>Iron</option>
+                  <option>Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-zinc-500 font-mono text-xs uppercase tracking-widest mb-2">Mass (kg)</label>
+                <input
+                  type="number"
+                  name="quantity"
+                  value={formData.quantity}
+                  onChange={handleFormChange}
+                  className="w-full px-4 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-amber-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-zinc-500 font-mono text-xs uppercase tracking-widest mb-2">Operational Status</label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleFormChange}
+                  className="w-full px-4 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-amber-500"
+                >
+                  <option value="reusable">Reusable</option>
+                  <option value="scrap">Scrap</option>
+                  <option value="recycled">Recycled</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-zinc-500 font-mono text-xs uppercase tracking-widest mb-2">Sector / Zone</label>
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleFormChange}
+                  className="w-full px-4 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-amber-500"
+                  required
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-zinc-500 font-mono text-xs uppercase tracking-widest mb-2">Diagnostic Notes</label>
+                <textarea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleFormChange}
+                  className="w-full px-4 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-amber-500"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="block text-zinc-500 font-mono text-xs uppercase tracking-widest mb-2">Estimated Value ($)</label>
+                <input
+                  type="number"
+                  name="estimatedValue"
+                  value={formData.estimatedValue}
+                  onChange={handleFormChange}
+                  className="w-full px-4 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <button
+                  type="submit"
+                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-bold py-3 rounded-xl transition-all shadow-lg shadow-emerald-500/20 uppercase tracking-wider mt-4"
+                >
+                  Commit to Database
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Inventory Table */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-zinc-800 border-b border-zinc-700">
+              <tr>
+                <th className="px-6 py-4 text-left font-mono text-xs font-bold text-zinc-400 uppercase tracking-widest">Material Signature</th>
+                <th className="px-6 py-4 text-left font-mono text-xs font-bold text-zinc-400 uppercase tracking-widest">Mass (kg)</th>
+                <th className="px-6 py-4 text-left font-mono text-xs font-bold text-zinc-400 uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-left font-mono text-xs font-bold text-zinc-400 uppercase tracking-widest">Zone</th>
+                <th className="px-6 py-4 text-left font-mono text-xs font-bold text-zinc-400 uppercase tracking-widest">Value</th>
+                <th className="px-6 py-4 text-left font-mono text-xs font-bold text-zinc-400 uppercase tracking-widest">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {inventory.map((item) => (
+                <tr key={item._id} className="border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors">
+                  <td className="px-6 py-4 text-sm text-zinc-200 font-mono font-bold tracking-wider">{item.metalType}</td>
+                  <td className="px-6 py-4 text-sm text-zinc-200 font-mono">{item.quantity}</td>
+                  <td className="px-6 py-4 text-sm">
+                    <span className={`px-3 py-1 rounded font-mono text-[10px] uppercase tracking-widest font-bold ${getStatusBadgeColor(item.status)}`}>
+                      {item.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-zinc-400 font-mono">{item.location}</td>
+                  <td className="px-6 py-4 text-sm text-amber-500 font-mono font-bold">${item.estimatedValue}</td>
+                  <td className="px-6 py-4 text-sm">
+                    <button
+                      onClick={() => handleDeleteItem(item._id)}
+                      className="text-red-500 hover:text-red-400 font-mono font-bold uppercase tracking-widest text-xs transition-colors"
+                    >
+                      Purge
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {inventory.length === 0 && (
+            <div className="text-center py-12 text-zinc-500 font-mono tracking-widest uppercase">
+              Database Empty. Awaiting initial scan inputs.
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
