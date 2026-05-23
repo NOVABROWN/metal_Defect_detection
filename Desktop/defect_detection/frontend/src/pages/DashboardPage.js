@@ -9,6 +9,7 @@ import { AuthContext } from '../context/AuthContext';
 const DashboardPage = () => {
   const [analytics, setAnalytics] = useState(null);
   const [myDetections, setMyDetections] = useState([]);
+  const [recentInspections, setRecentInspections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { user } = useContext(AuthContext);
@@ -21,17 +22,21 @@ const DashboardPage = () => {
     const fetchData = async () => {
       try {
         if (isAdmin) {
-          // Admin gets full analytics
-          const response = await axios.get(`${API_URL}/api/analytics`);
-          if (response.data.success) {
-            setAnalytics(response.data.data);
-          }
+          // Admin gets full analytics + recent inspections
+          const [analyticsRes, inspectionsRes] = await Promise.all([
+            axios.get(`${API_URL}/api/analytics`),
+            axios.get(`${API_URL}/api/inspections?limit=5`)
+          ]);
+          if (analyticsRes.data.success) setAnalytics(analyticsRes.data.data);
+          if (inspectionsRes.data.success) setRecentInspections(inspectionsRes.data.data);
         } else {
-          // Worker gets their own detections
-          const response = await axios.get(`${API_URL}/api/detections`);
-          if (response.data.success) {
-            setMyDetections(response.data.data);
-          }
+          // Worker gets their own detections + recent inspections
+          const [detectionsRes, inspectionsRes] = await Promise.all([
+            axios.get(`${API_URL}/api/detections`),
+            axios.get(`${API_URL}/api/inspections?limit=5`)
+          ]);
+          if (detectionsRes.data.success) setMyDetections(detectionsRes.data.data);
+          if (inspectionsRes.data.success) setRecentInspections(inspectionsRes.data.data);
         }
       } catch (err) {
         setError('Error fetching data: ' + err.message);
@@ -108,6 +113,48 @@ const DashboardPage = () => {
               </ResponsiveContainer>
             </div>
           )}
+
+          {/* Recent Inspections from MongoDB */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl p-6 mb-8">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold text-zinc-100 font-mono tracking-wider uppercase">🗃 Recent Inspections</h2>
+              <a href="/history" className="text-amber-500 hover:text-amber-400 font-mono text-xs uppercase tracking-wider transition">View Full History →</a>
+            </div>
+            {recentInspections.length === 0 ? (
+              <p className="text-zinc-500 text-center py-6 font-mono text-sm">No inspection records yet.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left text-zinc-300">
+                  <thead className="bg-zinc-800 text-zinc-400 font-mono tracking-wider uppercase text-xs">
+                    <tr>
+                      <th className="px-4 py-3 rounded-tl-lg">Image</th>
+                      <th className="px-4 py-3">Defect</th>
+                      <th className="px-4 py-3">Confidence</th>
+                      <th className="px-4 py-3">Severity</th>
+                      <th className="px-4 py-3">Operator</th>
+                      <th className="px-4 py-3 rounded-tr-lg">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentInspections.map((r) => (
+                      <tr key={r._id} className="border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors">
+                        <td className="px-4 py-3">
+                          <img src={`${API_URL}${r.imageUrl}`} alt={r.imageName} className="w-9 h-9 object-cover rounded-lg border border-zinc-700" onError={e => { e.target.style.display='none'; }} />
+                        </td>
+                        <td className="px-4 py-3 font-medium text-amber-400">{r.defectType}</td>
+                        <td className="px-4 py-3 font-mono">{((r.confidence||0)*100).toFixed(1)}%</td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-0.5 rounded text-xs font-bold font-mono uppercase tracking-wider ${ r.severity==='High' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : r.severity==='Medium' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>{r.severity}</span>
+                        </td>
+                        <td className="px-4 py-3 text-zinc-400 font-mono text-xs">{r.inspectedBy || '—'}</td>
+                        <td className="px-4 py-3 text-zinc-500 font-mono text-xs">{new Date(r.createdAt).toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
 
           {/* My Detection History */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl p-6">

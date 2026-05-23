@@ -6,6 +6,7 @@ const path = require('path');
 require('express-async-errors');
 
 const detectionRoutes = require('./routes/detections');
+const inspectionRoutes = require('./routes/inspections');
 const scrapInventoryRoutes = require('./routes/scrapInventory');
 const recyclingRecommendationRoutes = require('./routes/recyclingRecommendation');
 const analyticsRoutes = require('./routes/analytics');
@@ -41,6 +42,7 @@ connectDB();
 
 // Routes
 app.use('/api/detections', detectionRoutes);
+app.use('/api/inspections', inspectionRoutes);
 app.use('/api/scrap', scrapInventoryRoutes);
 app.use('/api/recommend', recyclingRecommendationRoutes);
 app.use('/api/analytics', analyticsRoutes);

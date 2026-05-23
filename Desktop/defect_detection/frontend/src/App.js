@@ -12,6 +12,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ChatPage from './pages/ChatPage';
 import KnowledgeBase from './pages/KnowledgeBase';
+import InspectionHistoryPage from './pages/InspectionHistoryPage';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
               <Route path="/result/:id" element={<ProtectedRoute><ResultPage /></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
               <Route path="/inventory" element={<ProtectedRoute requireAdmin><ScrapInventoryPage /></ProtectedRoute>} />
+              <Route path="/history" element={<ProtectedRoute><InspectionHistoryPage /></ProtectedRoute>} />
               <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
               <Route path="/knowledge-base" element={<ProtectedRoute requireAdmin><KnowledgeBase /></ProtectedRoute>} />
             </Routes>

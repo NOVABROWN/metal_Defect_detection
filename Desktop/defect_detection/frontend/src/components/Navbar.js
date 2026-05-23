@@ -17,6 +17,7 @@ const Navbar = () => {
     { to: '/', label: '🏠 Home', always: true },
     { to: '/upload', label: '📤 Upload', auth: true },
     { to: '/dashboard', label: '📊 Dashboard', auth: true },
+    { to: '/history', label: '🗃 History', auth: true },
     { to: '/chat', label: '🤖 AI Chat', auth: true },
     { to: '/inventory', label: '📦 Inventory', adminOnly: true },
     { to: '/knowledge-base', label: '🧠 Knowledge Base', adminOnly: true },

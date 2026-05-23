@@ -88,15 +88,21 @@ router.post('/upload', protect, upload.single('image'), async (req, res) => {
 
       const { defect_type, confidence, severity } = aiResponse.data.data;
 
-      // Save to database
+      // Save to database with all centralized inspection fields
       const detection = new Detection({
         userId: req.user._id,
         imageUrl: `/uploads/${req.file.filename}`,
+        imageName: req.file.originalname,
+        imagePath: `/uploads/${req.file.filename}`,
         imageFileName: req.file.originalname,
         defectType: defect_type,
+        predictionLabel: defect_type,
         confidence,
+        confidenceScore: confidence,
         severity,
-        metalType: 'Steel'
+        metalType: 'Steel',
+        detectionType: 'AI-Automated',
+        inspectedBy: req.user.username || req.user.email || 'Unknown'
       });
 
       await detection.save();
