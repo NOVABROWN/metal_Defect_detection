@@ -1,24 +1,25 @@
 import os
 import shutil
 from typing import List, Dict, Any
+
+# Patch langchain module BEFORE any langchain imports.
+# langchain_classic internals reference langchain.verbose/debug/llm_cache
+# which were removed in LangChain 1.x — pre-patching avoids AttributeError.
+import langchain as _lc
+if not hasattr(_lc, "verbose"):  _lc.verbose = False
+if not hasattr(_lc, "debug"):    _lc.debug = False
+if not hasattr(_lc, "llm_cache"): _lc.llm_cache = None
 from langchain_community.document_loaders import PyPDFLoader, Docx2txtLoader, TextLoader, CSVLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
-from langchain.chains import create_retrieval_chain
+from langchain.chains.retrieval import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
-import langchain
 
-# Fix for LangChain 0.3+ compatibility with some sub-packages
-if not hasattr(langchain, "verbose"):
-    langchain.verbose = False
-if not hasattr(langchain, "debug"):
-    langchain.debug = False
-if not hasattr(langchain, "llm_cache"):
-    langchain.llm_cache = None
+
 from dotenv import load_dotenv
 import logging
 
