@@ -16,7 +16,7 @@ const generateToken = (id) => {
 // @access  Public
 router.post('/register', async (req, res) => {
   try {
-    const { username, email, password, role } = req.body;
+    const { username, email, password, role, full_name, department } = req.body;
 
     // Check if user exists
     const userExists = await User.findOne({ email });
@@ -24,12 +24,19 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ success: false, message: 'User already exists' });
     }
 
+    // Auto-generate employee_id
+    const count = await User.countDocuments();
+    const employee_id = `EMP${1001 + count}`;
+
     // Create user
     const user = await User.create({
       username,
       email,
       password,
-      role: role || 'worker'
+      role: role || 'worker',
+      employee_id,
+      full_name,
+      department
     });
 
     const token = generateToken(user._id);
@@ -41,7 +48,10 @@ router.post('/register', async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
-        role: user.role
+        role: user.role,
+        employee_id: user.employee_id,
+        full_name: user.full_name,
+        department: user.department
       }
     });
   } catch (error) {
@@ -68,6 +78,10 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
+    // Update last_login
+    user.last_login = Date.now();
+    await user.save();
+
     const token = generateToken(user._id);
 
     res.status(200).json({
@@ -77,7 +91,10 @@ router.post('/login', async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
-        role: user.role
+        role: user.role,
+        employee_id: user.employee_id,
+        full_name: user.full_name,
+        department: user.department
       }
     });
   } catch (error) {

@@ -2,6 +2,19 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
+  employee_id: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  full_name: {
+    type: String,
+    default: ''
+  },
+  department: {
+    type: String,
+    default: ''
+  },
   username: {
     type: String,
     required: [true, 'Please add a username'],
@@ -27,6 +40,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['worker', 'admin'],
     default: 'worker'
+  },
+  last_login: {
+    type: Date,
+    default: null
+  },
+  status: {
+    type: String,
+    enum: ['active', 'inactive'],
+    default: 'active'
   },
   createdAt: {
     type: Date,

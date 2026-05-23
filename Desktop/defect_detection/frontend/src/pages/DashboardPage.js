@@ -10,6 +10,8 @@ const DashboardPage = () => {
   const [analytics, setAnalytics] = useState(null);
   const [myDetections, setMyDetections] = useState([]);
   const [recentInspections, setRecentInspections] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [activityLogs, setActivityLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { user } = useContext(AuthContext);
@@ -22,21 +24,27 @@ const DashboardPage = () => {
     const fetchData = async () => {
       try {
         if (isAdmin) {
-          // Admin gets full analytics + recent inspections
-          const [analyticsRes, inspectionsRes] = await Promise.all([
+          // Admin gets full analytics + recent inspections + employees + logs
+          const [analyticsRes, inspectionsRes, employeesRes, logsRes] = await Promise.all([
             axios.get(`${API_URL}/api/analytics`),
-            axios.get(`${API_URL}/api/inspections?limit=5`)
+            axios.get(`${API_URL}/api/inspections?limit=5`),
+            axios.get(`${API_URL}/api/employees`),
+            axios.get(`${API_URL}/api/logs?limit=10`)
           ]);
           if (analyticsRes.data.success) setAnalytics(analyticsRes.data.data);
           if (inspectionsRes.data.success) setRecentInspections(inspectionsRes.data.data);
+          if (employeesRes.data.success) setEmployees(employeesRes.data.data);
+          if (logsRes.data.success) setActivityLogs(logsRes.data.data);
         } else {
-          // Worker gets their own detections + recent inspections
-          const [detectionsRes, inspectionsRes] = await Promise.all([
+          // Worker gets their own detections + recent inspections + own logs
+          const [detectionsRes, inspectionsRes, logsRes] = await Promise.all([
             axios.get(`${API_URL}/api/detections`),
-            axios.get(`${API_URL}/api/inspections?limit=5`)
+            axios.get(`${API_URL}/api/inspections?limit=5`),
+            axios.get(`${API_URL}/api/logs?limit=10`)
           ]);
           if (detectionsRes.data.success) setMyDetections(detectionsRes.data.data);
           if (inspectionsRes.data.success) setRecentInspections(inspectionsRes.data.data);
+          if (logsRes.data.success) setActivityLogs(logsRes.data.data);
         }
       } catch (err) {
         setError('Error fetching data: ' + err.message);
@@ -113,6 +121,39 @@ const DashboardPage = () => {
               </ResponsiveContainer>
             </div>
           )}
+
+          {/* Worker Activity Feed */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl p-6 mb-8">
+            <h2 className="text-xl font-bold text-zinc-100 mb-6 font-mono tracking-wider uppercase">My Activity Feed</h2>
+            {activityLogs.length === 0 ? (
+              <p className="text-zinc-500 text-center py-4 font-mono text-sm">No recent activity.</p>
+            ) : (
+              <div className="space-y-4">
+                {activityLogs.map(log => (
+                  <div key={log._id} className="p-4 bg-zinc-800/40 border border-zinc-700/50 rounded-xl hover:bg-zinc-800/60 transition-colors">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+                          {log.employee_name ? log.employee_name.charAt(0).toUpperCase() : 'U'}
+                        </div>
+                        <div>
+                          <p className="text-zinc-200">
+                            <span className="font-bold text-amber-500">{log.employee_name || log.employee_id}</span> {log.action} <span className="text-zinc-400 font-mono text-xs">({log.detection_type})</span>
+                          </p>
+                          <p className="text-sm mt-1">
+                            <span className="text-zinc-400">File:</span> <span className="font-mono text-cyan-400">{log.image_name}</span> | <span className="text-zinc-400">Prediction:</span> <span className="font-mono text-red-400">{log.prediction}</span> ({log.confidence_score})
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-mono text-zinc-500 whitespace-nowrap">
+                        {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Recent Inspections from MongoDB */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl p-6 mb-8">
@@ -234,6 +275,82 @@ const DashboardPage = () => {
             <p className="text-4xl font-black text-emerald-500 mt-2">{summary.totalCo2Saved || 0} <span className="text-lg">kg</span></p>
           </div>
         </div>
+
+      {/* Admin Monitoring Panel: Employee Directory & Global Activity Feed */}
+      <div className="grid lg:grid-cols-2 gap-8 mb-12">
+        {/* Employee Directory */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-zinc-100 font-mono tracking-wider uppercase">👥 Personnel Directory</h2>
+            <span className="px-3 py-1 bg-zinc-800 text-amber-500 rounded-full font-mono text-xs">{employees.length} Active</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left text-zinc-300">
+              <thead className="bg-zinc-800 text-zinc-400 font-mono tracking-wider uppercase text-xs">
+                <tr>
+                  <th className="px-4 py-3 rounded-tl-lg">ID</th>
+                  <th className="px-4 py-3">Name / Handle</th>
+                  <th className="px-4 py-3">Role</th>
+                  <th className="px-4 py-3">Dept</th>
+                  <th className="px-4 py-3 rounded-tr-lg">Last Login</th>
+                </tr>
+              </thead>
+              <tbody>
+                {employees.map(emp => (
+                  <tr key={emp._id} className="border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors">
+                    <td className="px-4 py-3 font-mono text-cyan-500">{emp.employee_id || '—'}</td>
+                    <td className="px-4 py-3">
+                      <div className="font-bold text-zinc-100">{emp.full_name || emp.username}</div>
+                      {emp.full_name && <div className="text-xs text-zinc-500 font-mono">@{emp.username}</div>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase tracking-widest ${emp.role === 'admin' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-zinc-800 text-zinc-300 border border-zinc-600'}`}>
+                        {emp.role}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs text-zinc-400">{emp.department || '—'}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-zinc-500">{emp.last_login ? new Date(emp.last_login).toLocaleDateString() : 'Never'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Global Activity Feed */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl p-6">
+          <h2 className="text-xl font-bold text-zinc-100 mb-6 font-mono tracking-wider uppercase">🌐 Global Activity Feed</h2>
+          {activityLogs.length === 0 ? (
+            <p className="text-zinc-500 text-center py-4 font-mono text-sm">No recent activity.</p>
+          ) : (
+            <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+              {activityLogs.map(log => (
+                <div key={log._id} className="p-4 bg-zinc-800/40 border border-zinc-700/50 rounded-xl hover:bg-zinc-800/60 transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-amber-500/20 text-amber-500 flex items-center justify-center font-bold">
+                        {log.employee_name ? log.employee_name.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                      <div>
+                        <p className="text-zinc-200">
+                          <span className="font-bold text-amber-500">{log.employee_name || log.employee_id}</span> {log.action} <span className="text-zinc-400 font-mono text-xs">({log.detection_type})</span>
+                        </p>
+                        <p className="text-sm mt-1">
+                          <span className="text-zinc-400">File:</span> <span className="font-mono text-cyan-400">{log.image_name}</span> | <span className="text-zinc-400">Result:</span> <span className="font-mono text-red-400">{log.prediction}</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs font-mono text-zinc-400">{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                      <div className="text-[10px] font-mono text-zinc-600 mt-1">{new Date(log.timestamp).toLocaleDateString()}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Charts Grid */}
       <div className="grid md:grid-cols-2 gap-8 mb-12">

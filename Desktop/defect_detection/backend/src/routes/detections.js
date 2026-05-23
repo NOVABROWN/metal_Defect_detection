@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const axios = require('axios');
 const Detection = require('../models/Detection');
+const InspectionLog = require('../models/InspectionLog');
 const { protect } = require('../middleware/auth');
 const fs = require('fs');
 const path = require('path');
@@ -106,6 +107,23 @@ router.post('/upload', protect, upload.single('image'), async (req, res) => {
       });
 
       await detection.save();
+
+      // Create Inspection Log
+      const employeeName = req.user.full_name || req.user.username || 'Unknown';
+      const employeeId = req.user.employee_id || 'UNKNOWN_ID';
+      const confScoreStr = (confidence * 100).toFixed(1) + '%';
+      
+      const inspectionLog = new InspectionLog({
+        employee_id: employeeId,
+        employee_name: employeeName,
+        image_name: req.file.originalname,
+        image_path: `/uploads/${req.file.filename}`,
+        prediction: defect_type,
+        confidence_score: confScoreStr,
+        detection_type: 'uploaded image',
+        action: 'inspection completed'
+      });
+      await inspectionLog.save();
 
       res.status(201).json({
         success: true,

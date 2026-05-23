@@ -11,6 +11,8 @@ const scrapInventoryRoutes = require('./routes/scrapInventory');
 const recyclingRecommendationRoutes = require('./routes/recyclingRecommendation');
 const analyticsRoutes = require('./routes/analytics');
 const authRoutes = require('./routes/authRoutes');
+const employeesRoutes = require('./routes/employees');
+const logsRoutes = require('./routes/logs');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -47,6 +49,8 @@ app.use('/api/scrap', scrapInventoryRoutes);
 app.use('/api/recommend', recyclingRecommendationRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/employees', employeesRoutes);
+app.use('/api/logs', logsRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {

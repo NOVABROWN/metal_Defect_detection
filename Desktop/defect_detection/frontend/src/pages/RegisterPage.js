@@ -4,8 +4,10 @@ import { AuthContext } from '../context/AuthContext';
 
 const RegisterPage = () => {
   const [username, setUsername] = useState('');
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [department, setDepartment] = useState('');
   const [role, setRole] = useState('worker');
   const [error, setError] = useState('');
   const { register } = useContext(AuthContext);
@@ -14,7 +16,7 @@ const RegisterPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    const success = await register(username, email, password, role);
+    const success = await register(username, email, password, role, fullName, department);
     if (success) {
       navigate('/dashboard');
     } else {
@@ -42,6 +44,20 @@ const RegisterPage = () => {
               <input type="text" placeholder="username"
                 className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-amber-500 transition-colors font-mono"
                 value={username} onChange={(e) => setUsername(e.target.value)} required />
+            </div>
+
+            <div>
+              <label className="block text-zinc-500 font-mono text-xs uppercase tracking-widest mb-2">Full Name</label>
+              <input type="text" placeholder="John Doe"
+                className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-amber-500 transition-colors font-mono"
+                value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+            </div>
+            
+            <div>
+              <label className="block text-zinc-500 font-mono text-xs uppercase tracking-widest mb-2">Department / Team</label>
+              <input type="text" placeholder="Quality Assurance"
+                className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-amber-500 transition-colors font-mono"
+                value={department} onChange={(e) => setDepartment(e.target.value)} required />
             </div>
             
             <div>
